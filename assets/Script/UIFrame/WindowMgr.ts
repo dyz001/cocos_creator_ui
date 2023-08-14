@@ -1,14 +1,15 @@
 import PriorityQueue from "../Common/Utils/PriorityQueue";
 import PriorityStack from "../Common/Utils/PriorityStack";
-import { EPriority, IFormData } from "./Struct";
+import { FormType } from "./config/SysDefine";
+import { EPriority, GetForm, IFormConfig, IFormData } from "./Struct";
 import UIManager from "./UIManager";
 
 class WindowMgr {
     // 窗体
-    private _showingList: PriorityStack<string> = new PriorityStack();
+    private _showingList: PriorityStack<IFormConfig> = new PriorityStack((a: IFormConfig, b: IFormConfig) => a.prefabUrl === b.prefabUrl);
     private _waitingList: PriorityQueue<WindowData> = new PriorityQueue();
     
-    private _currWindow: string | null = null;
+    private _currWindow: IFormConfig;
     public get currWindow() {
         return this._currWindow;
     }
@@ -18,29 +19,32 @@ class WindowMgr {
     }
 
     /** 打开窗体 */
-    public async open(prefabPath: string, params?: any, formData: IFormData = {showWait: false, priority: EPriority.FIVE}) {
-        this._formatFormData(formData);
-        if(this._showingList.size <= 0 || (!formData.showWait && formData.priority || 0 >= this._showingList.getTopEPriority())) {
-            this._showingList.push(prefabPath, formData.priority);
+    public async open(form: IFormConfig | string, params?: any, formData?: IFormData) {
+        form = GetForm(form, FormType.Window);
+        let prefabPath = form.prefabUrl;
+        formData = this._formatFormData(formData);
+        if(this._showingList.size <= 0 || (!formData.showWait && formData.priority >= this._showingList.getTopEPriority())) {
+            this._showingList.push(form, formData.priority);
             this._currWindow = this._showingList.getTopElement();
-            return await UIManager.getInstance().openForm(prefabPath, params, formData);
+            return await UIManager.getInstance().openForm(form, params, formData);
         }
         
         // 入等待队列
-        this._waitingList.enqueue({prefabPath: prefabPath, params: params, formData: formData});
+        this._waitingList.enqueue({form: form, params: params, formData: formData});
         // 加载窗体
         return await UIManager.getInstance().loadUIForm(prefabPath);
     }
 
-    public async close(prefabPath: string) {
-        let result = this._showingList.remove(prefabPath);
+    public async close(form: IFormConfig | string, params?: any, formData?: IFormData) {
+        form = GetForm(form, FormType.Window);
+        let result = this._showingList.remove(form);
         if(!result) return false;
 
-        await UIManager.getInstance().closeForm(prefabPath);
+        await UIManager.getInstance().closeForm(form, params, formData);
 
         if(this._showingList.size <= 0 && this._waitingList.size > 0) {
             let windowData = this._waitingList.dequeue();
-            if(windowData) this.open(windowData.prefabPath, windowData.params, windowData.formData);
+            this.open(windowData.form, windowData.params, windowData.formData);
         }
         return true;
     }
@@ -58,21 +62,12 @@ class WindowMgr {
     }
 
     private _formatFormData(formData: any) {
-        if(!formData) formData = {};
-
-        if(!formData.hasOwnProperty("showWait")) {        // 当前有已经显示的window时, 会放等待列表里, 知道 当前没有正在显示的window时才被显示
-            formData.showWait = false;
-        }
-        if(!formData.hasOwnProperty("priority")) {        // 优先级(会影响弹窗的层级, 先判断优先级, 在判断添加顺序)
-            formData.priority = EPriority.FIVE;
-        }
-
-        return formData;
+        return Object.assign({showWait: false, priority: EPriority.FIVE}, formData);
     }
 }
 
 class WindowData {
-    prefabPath: string = '';
+    form: IFormConfig;
     params?: any;
     formData?: any;
 }

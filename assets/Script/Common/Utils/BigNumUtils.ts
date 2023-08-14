@@ -141,7 +141,7 @@ export default class BigNumUtils {
         }
         return `${base * sign}e${value[1]}`;
     }
-    public static BNDevide(value0: number, value1: number) {
+    public static BNDevide(value0, value1) {
         if (+value1 === 0) {
             return 0;
         }

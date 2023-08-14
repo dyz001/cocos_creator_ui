@@ -1,9 +1,5 @@
-import * as cc from "cc";
-
 import CocosHelper from "./CocosHelper";
-import UIBase from "./UIBase";
-import { EventCenter } from "./EventCenter";
-
+import * as cc from "cc";
 /**
  * 资源加载, 针对的是Form
  * 首先将资源分为两类
@@ -19,7 +15,7 @@ import { EventCenter } from "./EventCenter";
  * 所以销毁一个窗体 也需要两步, 销毁node, 销毁prefab
  */
 export default class ResMgr {
-    private static instance: ResMgr | null = null;
+    private static instance: ResMgr = null;
     public static get inst() {
         if(this.instance === null) {
             this.instance = new ResMgr();
@@ -36,36 +32,40 @@ export default class ResMgr {
     private _tmpAssetsDepends: string[] = [];                                       // 临时缓存
     private _assetsReference: {[key: string]: number} = cc.js.createMap();          // 资源引用计数
 
+    private _prefabs: {[key: string]: cc.Prefab} = cc.js.createMap();               // 预制体缓存
+
+    /** 获取预制体 */
+    public getFormPrefab(fid: string) {
+        return this._prefabs[fid];
+    }
     
     /** 加载窗体 */
-    public async loadForm(fid: string) {
-        let result = await this._loadResWithReference<cc.Prefab>(fid, cc.Prefab);
-        if(!result) return ;
-        let {res, deps} = result;
+    public async loadFormPrefab(fid: string) {
+        if(this._prefabs[fid]) return this._prefabs[fid];
+        let {res, deps} = await this._loadResWithReference<cc.Prefab>(fid, cc.Prefab);
         this._prefabDepends[fid] = deps;
-        return cc.instantiate(res);
+        this._prefabs[fid] = res;
+        return res;
     }
 
     /** 销毁窗体 */
-    public destoryForm(com: UIBase) {
-        if(!com) return;
-        EventCenter.targetOff(com);
-
+    public destoryFormPrefab(fid: string) {
+        if(this._prefabs[fid]) {
+            this._prefabs[fid].destroy();
+            this._prefabs[fid] = null;
+            delete this._prefabs[fid];
+        }
         // 销毁依赖的资源
-        this._destoryResWithReference(this._prefabDepends[com.fid]);
-
-        delete this._prefabDepends[com.fid];
-
-        // 销毁node
-        com.node.destroy();
+        this._destoryResWithReference(this._prefabDepends[fid]);
+        // 删除缓存
+        this._prefabDepends[fid] = null;
+        delete this._prefabDepends[fid];
     }
 
 
     /** 动态资源管理, 通过tag标记当前资源, 统一释放 */
     public async loadDynamicRes<T>(url: string, type: typeof cc.Asset, tag: string) {
-        let result = await this._loadResWithReference<T>(url, type);
-        if(!result) return ;
-        let {res, deps} = result;
+        let {res, deps} = await this._loadResWithReference<T>(url, type);
         if(!this._dynamicTags[tag]) {
             this._dynamicTags[tag] = [];
         }
@@ -80,6 +80,7 @@ export default class ResMgr {
         }
         this._destoryResWithReference(this._dynamicTags[tag])
         
+        this._dynamicTags[tag] = null;
         delete this._dynamicTags[tag];
 
         return true;
@@ -94,10 +95,8 @@ export default class ResMgr {
             return null;
         }
         this._clearTmpAssetsDepends();
-        //@ts-ignore
-        let uuid = res._uuid;
-        let deps = cc.assetManager.dependUtil.getDepsRecursively(uuid) || [];
-        deps.push(uuid);
+        let deps = cc.assetManager.dependUtil.getDepsRecursively(res['_uuid']) || [];
+        deps.push(res['_uuid']);
         this.addAssetsDepends(deps);
 
         return {
@@ -145,9 +144,10 @@ export default class ResMgr {
     /** 销毁资源 */
     private _destoryAsset(url: string) {
         if(this._checkIsBuiltinAssets(url)) return;
-        cc.assetManager.assets.remove(url);               // 从缓存中清除
         let asset = cc.assetManager.assets.get(url);      // 销毁该资源
-        asset && asset.destroy();
+        if(!asset) return;
+        asset.destroy();
+        cc.assetManager.assets.remove(url);               // 从缓存中清除
         cc.assetManager.dependUtil['remove'](url);        // 从依赖中删除
     }
 
@@ -185,10 +185,8 @@ export default class ResMgr {
         let cache = cc.assetManager.assets;
         let totalTextureSize = 0;
         let count = 0;
-        cache.forEach((item: cc.Asset, key: string) => {      
-            //@ts-ignore
-            let className = item.__classname__;      
-            let type = (item && className) ? className : '';
+        cache.forEach((item: cc.Asset, key: string) => {            
+            let type = (item && item['__classname__']) ? item['__classname__'] : '';
             if(type == 'cc.Texture2D') {
                 let texture = item as cc.Texture2D;
                 let textureSize = texture.width * texture.height * ((texture['_native'] === '.jpg' ? 3 : 4) / 1024 / 1024);

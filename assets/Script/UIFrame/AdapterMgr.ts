@@ -1,5 +1,9 @@
+/**
+ * @Author: honmono 
+ * @Date: 2019-06-12 17:18:04  
+ * @Describe: 适配组件, 主要适配背景大小,窗体的位置
+ */
 import * as cc from "cc";
-
 let flagOffset = 0;
 const _None = 1 << flagOffset ++;
 const _Left = 1 << flagOffset ++;            // 左对齐
@@ -29,10 +33,10 @@ export enum AdapterType {
 
 const {ccclass, property} = cc._decorator;
 
-@ccclass("AdapterMgr")
+@ccclass
 export default class AdapterMgr {
 
-    private static _instance: AdapterMgr | null = null;                     // 单例
+    private static _instance: AdapterMgr = null;                     // 单例
     public static get inst() {
         if(this._instance == null) {
             this._instance = new AdapterMgr();       
@@ -43,7 +47,7 @@ export default class AdapterMgr {
     }
     
     /** 屏幕尺寸 */
-    public visibleSize: cc.Size | null = null;;
+    public visibleSize: cc.Size;
 
     public adapteByType(flag: number, node: cc.Node, distance = 0) {
         let tFlag = _Final;
@@ -53,19 +57,17 @@ export default class AdapterMgr {
             tFlag = tFlag >> 1;
         }
         let widget = node.getComponent(cc.Widget);
-        if(!widget) widget = node.addComponent(cc.Widget);
         widget.target = cc.find("Canvas");
         widget.updateAlignment();
     }
 
     private _doAdapte(flag: number, node: cc.Node, distance: number = 0) {
-        if(!this.visibleSize) return ;
         let widget = node.getComponent(cc.Widget);
         if(!widget) {
             widget = node.addComponent(cc.Widget);
         }
-        let trans = node.getComponent(cc.UITransform);
-        if(!trans) trans = node.addComponent(cc.UITransform);
+        let sizeComp = node.getComponent(cc.UITransform);
+        let size = sizeComp.contentSize;
         switch(flag) {
             case _None:
                 break;
@@ -95,12 +97,15 @@ export default class AdapterMgr {
                 widget.bottom = distance ? distance : 0;
                 break;
             case _FullWidth:
-                trans.height /= trans.width / this.visibleSize.width;
-                trans.width = this.visibleSize.width;
+                let height = size.height;
+                height /= size.width / this.visibleSize.width;
+                let width = this.visibleSize.width;
+                sizeComp.setContentSize(new cc.Size(width, height));
                 break;
             case _FullHeight:
-                trans.width /= trans.height / this.visibleSize.height;
-                trans.height = this.visibleSize.height;
+                let w = size.width;
+                w /= size.height / this.visibleSize.height;
+                sizeComp.setContentSize(new cc.Size(w, this.visibleSize.height));
                 break;
         }
     }

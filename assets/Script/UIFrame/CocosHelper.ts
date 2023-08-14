@@ -236,5 +236,24 @@ export default class CocosHelper {
             assets.decRef();
         }
     }
+
+    public static captureScreen(camera: cc.Camera, prop?: cc.Rect) {
+        let newTexture = new cc.RenderTexture();
+        let oldTexture = camera.targetTexture;
+        let rect: cc.Rect = cc.rect(0, 0, cc.view.getVisibleSize().width, cc.view.getVisibleSize().height);
+        if(prop) {
+            rect = prop;
+        }
+        newTexture.initialize({width:cc.view.getVisibleSize().width, height:cc.view.getVisibleSize().height});
+        camera.targetTexture = newTexture;
+        camera.camera.update();
+        // camera.render();
+        camera.targetTexture = oldTexture;
+        
+        let buffer = new ArrayBuffer(rect.width * rect.height * 4);
+        let data = new Uint8Array(buffer);
+        newTexture.readPixels(rect.x, rect.y, rect.width, rect.height, data);
+        return data;
+    }
 }
 

@@ -1,10 +1,11 @@
 import * as cc from "cc";
-
 import { FormType } from "./config/SysDefine";
 import FixedMgr from "./FixedMgr";
 import SceneMgr from "./SceneMgr";
 import { IFormConfig, IFormData } from "./Struct";
 import TipsMgr from "./TipsMgr";
+import ToastMgr from "./ToastMgr";
+import UIManager from "./UIManager";
 import WindowMgr from "./WindowMgr";
 
 class FormMgr {
@@ -17,29 +18,34 @@ class FormMgr {
     async open(form: IFormConfig, param?: any, formData?: IFormData) {
         switch(form.type) {
             case FormType.Screen:
-                return await SceneMgr.open(form.prefabUrl, param, formData);
+                return await SceneMgr.open(form, param, formData);
             case FormType.Window:
-                return await WindowMgr.open(form.prefabUrl, param, formData);
+                return await WindowMgr.open(form, param, formData);
             case FormType.Fixed:
-                return await FixedMgr.open(form.prefabUrl, param, formData);
+                return await FixedMgr.open(form, param, formData);
             case FormType.Tips:
-                return await TipsMgr.open(form.prefabUrl, param, formData);
+                return await TipsMgr.open(form, param, formData);
+            case FormType.Toast:
+                return await ToastMgr.open(form, param, formData);
             default:
                 cc.error(`未知类型的窗体: ${form.type}`);
                 return null;
         }
     }
 
-    async close(form: IFormConfig) {
+    async close(form: IFormConfig, param?: any, formData?: IFormData) {
         switch(form.type) {
             case FormType.Screen:
-                return await SceneMgr.close(form.prefabUrl);
+                return await SceneMgr.close(form, param, formData);
             case FormType.Window:
-                return await WindowMgr.close(form.prefabUrl);
+                return await WindowMgr.close(form, param, formData);
             case FormType.Fixed:
-                return await FixedMgr.close(form.prefabUrl);
+                return await FixedMgr.close(form, param, formData);
             case FormType.Tips:
-                return await TipsMgr.close(form.prefabUrl);
+                return await TipsMgr.close(form, param, formData);
+            case FormType.Toast:
+                cc.warn("UIToast 目前不能通过这种方式关闭, 请使用 ToastMgr.close()");
+                break;
             default:
                 cc.error(`未知类型的窗体: ${form.type}`);
                 return false;
@@ -52,6 +58,10 @@ class FormMgr {
 
     async closeAllWindows() {
         await WindowMgr.closeAll();
+    }
+
+    async load(form: IFormConfig) {
+        await UIManager.getInstance().loadUIForm(form.prefabUrl);
     }
 
 }

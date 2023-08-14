@@ -1,30 +1,69 @@
 import * as cc from "cc";
-
 import UIManager from "./UIManager";
 import { FormType } from "./config/SysDefine";
-import { IFormData } from "./Struct";
+import { ECloseType, GetForm, IFormConfig, IFormData } from "./Struct";
 import AdapterMgr from "./AdapterMgr";
 import ResMgr from "./ResMgr";
+import FormMgr from "./FormMgr";
+import { UIAuto } from "./UIAuto";
 
-export default class UIBase extends cc.Component {
+export default class UIBase{
     /** 窗体id,该窗体的唯一标示(请不要对这个值进行赋值操作, 内部已经实现了对应的赋值) */
     public fid: string = '';
     /** 窗体数据 */
-    public formData: IFormData | undefined = undefined;
+    public formData: IFormData | null = null;
     /** 窗体类型 */
-    public formType: FormType = FormType.Screen;
-    /** 关闭窗口后销毁, 会将其依赖的资源一并销毁, 采用了引用计数的管理, 不用担心会影响其他窗体 */
-    public willDestory = false;
+    public formType: FormType | null = null;
+    /** 关闭类型, 关闭窗口后销毁, 会将其依赖的资源一并销毁, 采用了引用计数的管理, 不用担心会影响其他窗体 */
+    public closeType: ECloseType | null = ECloseType.LRU;
     /** 是否已经调用过preinit方法 */
     private _inited = false;
 
-    public view: cc.Component | null = null;
+    public view: UIAuto = null;
+
+    public static open(param?: any, formData?: IFormData) {
+        let uiconfig = this['UIConfig'];
+        if(!uiconfig) {
+            cc.warn(`sorry UIConfig is null, please check AutoConfig`);
+            return ;
+        }
+        FormMgr.open(uiconfig, param, formData);
+    }
+    public static close() {
+        FormMgr.close(this['UIConfig']);
+    }
+
+    public get uuid(){
+        return this.view.uuid;
+    }
+
+    public get node(){
+        return this.view.node;
+    }
+
+    public changeView(uiconfig: IFormConfig){
+        UIManager.getInstance().changePrefab(this, uiconfig);
+        this.onViewChange();
+    }
+
+    public onViewChange(){
+        this.view.formType = this.formType;
+        this.view.fid = this.fid;
+        this.addEvents();
+    }
+
+    protected addEvents(){}
+    protected removeEvents(){}
+
+    public getViewComponent(){
+        return this.view;
+    }
 
     /** 预先初始化 */
     public async _preInit(params: any) {
         if(this._inited) return ;
         this._inited = true;
-        this.view = this.getComponent(`${this.node.name}_Auto`);
+        // this.view = this.getComponent(`${this.node.name}_Auto`);
         // 加载这个UI依赖的其他资源
         let errorMsg = await this.load(params);
         if(errorMsg) {
@@ -39,7 +78,7 @@ export default class UIBase extends cc.Component {
 
     /** 可以在这里进行一些资源的加载, 具体实现可以看test下的代码 */
     public async load(params: any): Promise<string> {
-        return '';
+        return null;
     }
 
     /** 初始化, 只调用一次 */
@@ -49,13 +88,13 @@ export default class UIBase extends cc.Component {
     // 在显示动画结束后回调
     public onAfterShow(params: any) {}
     // 隐藏回调
-    public onHide() {}    
+    public onHide(params: any) {}    
     // 在隐藏动画结束后回调
-    public onAfterHide() {}
+    public onAfterHide(params: any) {}
 
     // 关闭自己
-    public async closeSelf(): Promise<boolean> {
-       return await UIManager.getInstance().closeForm(this.fid);
+    public async closeSelf(params?: any): Promise<boolean> {
+        return await FormMgr.close(GetForm(this.fid, this.formType), params);
     }
 
     /**
@@ -65,21 +104,19 @@ export default class UIBase extends cc.Component {
     public async hideEffect() {}
 
     /** 设置是否挡住触摸事件 */
-    private _blocker: cc.BlockInputEvents | null = null;
+    private _blocker: cc.BlockInputEvents = null;
     public setBlockInput(block: boolean) {
         if(!this._blocker)  {
             let node = new cc.Node('block_input_events');
             this._blocker = node.addComponent(cc.BlockInputEvents);
-            let trans = node.getComponent(cc.UITransform);
-            if(!trans) trans = node.addComponent(cc.UITransform);
-            if(AdapterMgr.inst.visibleSize) trans.setContentSize(AdapterMgr.inst.visibleSize);
-            this.node.insertChild(this._blocker.node, 9999);
+            this._blocker.node.getComponent(cc.UITransform).setContentSize(AdapterMgr.inst.visibleSize);
+            this.node.addChild(this._blocker.node);
         }
         this._blocker.node.active = block;
     }
 
     public async loadRes(url: string, type?: typeof cc.Asset) {
-        return await ResMgr.inst.loadDynamicRes(url, type || cc.Asset, this.fid);
+        return await ResMgr.inst.loadDynamicRes(url, type, this.fid);
     }
 }
 

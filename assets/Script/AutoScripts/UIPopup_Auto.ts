@@ -1,9 +1,8 @@
-
 import * as cc from "cc";
-import { UIAuto } from "../UIFrame/UIAuto";
+// import { UIAuto } from "../UIFrame/UIAuto";
 const {ccclass, property} = cc._decorator;
 @ccclass
-export default class UIPopup_Auto extends UIAuto {
+export default class UIPopup_Auto extends cc.Component {
 	@property(cc.Label)
 	lbl_name: cc.Label = null;
 	@property(cc.Sprite)

@@ -11,11 +11,14 @@ export default class SoundMgr extends cc.Component {
     private audioCache: {[key: string]: cc.AudioClip} = cc.js.createMap();
 
     private static _inst: SoundMgr | null = null;                     // 单例
+    protected sound: cc.AudioSource;
     public static get inst(): SoundMgr | null {
         if(this._inst == null) {
             let root = cc.find(SysDefine.SYS_UIROOT_NAME);
             if(!root) return null;
             this._inst = root.addComponent<SoundMgr>(this);
+            this._inst.sound = root.addComponent(cc.AudioSource);
+            this._inst.sound.loop = true;
         }
         return this._inst;
     }
@@ -34,11 +37,13 @@ export default class SoundMgr extends cc.Component {
         this.setVolumeToLocal();
 
         cc.game.on(cc.Game.EVENT_HIDE, () => {
+            this.sound.stop();
             //cc.audioEngine.pauseAll();
-            cc
         }, this);
         cc.game.on(cc.Game.EVENT_SHOW, () => {
-            //cc.audioEngine.resumeAll();
+            if(!this.sound.clip) return;
+            this.sound.volume = this.volume.musicVolume;
+            this.sound.play();
         }, this);
     }
     /** volume */
@@ -64,11 +69,14 @@ export default class SoundMgr extends cc.Component {
         if(!url || url === '') return ;
         
         if(this.audioCache[url]) {
-            //cc.audioEngine.playMusic(this.audioCache[url], loop);
+            this.sound.clip = this.audioCache[url];
+            this.sound.play();
             return ;
         }
         let sound = await CocosHelper.loadResSync<cc.AudioClip>(url, cc.AudioClip);
         if(sound) this.audioCache[url] = sound;
+        this.sound.clip = sound;
+        this.sound.play();
         //this.currMusicId = cc.audioEngine.playMusic(sound, loop);
     }
     /** 播放音效 */
@@ -76,12 +84,12 @@ export default class SoundMgr extends cc.Component {
         if(!url || url === '') return ;
         
         if(this.audioCache[url]) {
-            //cc.audioEngine.playEffect(this.audioCache[url], loop);
+            this.sound.playOneShot(this.audioCache[url], this.volume.effectVolume);
             return ;
         }
         let sound = await CocosHelper.loadResSync<cc.AudioClip>(url, cc.AudioClip);
         if(sound) this.audioCache[url] = sound;
-        //this.currEffectId = cc.audioEngine.playEffect(sound, loop);
+        this.sound.playOneShot(sound, this.volume.effectVolume);
     }
 
     /** 从本地读取 */

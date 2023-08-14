@@ -1,5 +1,3 @@
-import * as cc from "cc";
-
 import CocosHelper from "../../UIFrame/CocosHelper";
 import { MathUtils } from "./MatchUtils";
 
@@ -189,12 +187,12 @@ export class CommonUtils {
     public static addSimpleClick(target:cc.Node, cb:()=>void) {
         let targetNode = target;
         let lastTouchPos : cc.Vec2 = null;
-        targetNode.on(cc.Node.EventType.TOUCH_START, (e: cc.EventTouch)=>{
+        targetNode.on(cc.Node.EventType.TOUCH_START, (e:cc.Event.EventTouch)=>{
             lastTouchPos = e.getLocation();
         }, this);
-        targetNode.on(cc.Node.EventType.TOUCH_END, (e: cc.EventTouch)=>{
+        targetNode.on(cc.Node.EventType.TOUCH_END, (e:cc.Event.EventTouch)=>{
             if(lastTouchPos) {
-                let delta = lastTouchPos.subtract(e.getLocation()).length();
+                let delta = lastTouchPos.subSelf(e.getLocation()).mag();
                 if(delta < 3) {
                     cb();
                 }
@@ -324,7 +322,7 @@ export class CommonUtils {
         }
     }
 
-    private static getExponent(value: number) {
+    private static getExponent(value) {
         var exp = 0;
         while (value >= 10) {
             exp++;
@@ -382,6 +380,29 @@ export class CommonUtils {
         return (suffix == c.substring(c.length - suffix.length));
     }
 
+    static makeMaxWidthLabel(label: cc.Label,width:number) : cc.Label {
+        let obj = {};
+        obj["__proto__"] = label;
+        Object.defineProperty(obj, "string", {
+            configurable:true,
+            enumerable:true,
+            get() {
+                return label.string;
+            },
+            set(str) {
+                label.overflow = cc.Label.Overflow.NONE;
+                label.string = str;
+                label["_updateRenderData"](true);
+                if(label.node.width > width) {
+                    label.overflow = cc.Label.Overflow.RESIZE_HEIGHT;
+                    label.node.setContentSize(width, 1);
+                    label.string = str;
+                }
+            }
+        });
+        return <cc.Label>obj;
+    }
+
     public static climeUserName(name: string, showLen = 14) {
         let len = name.length;
         while (this.strlen(name) > showLen) {
@@ -393,7 +414,7 @@ export class CommonUtils {
         return name;
     }
 
-    private static strlen(str: string) {
+    private static strlen(str) {
         let len = 0;
         for (let i = 0; i < str.length; i++) {
           let c = str.charCodeAt(i);
@@ -447,7 +468,7 @@ export class CommonUtils {
 
     // 判断一个点是否在三角形内
     public static isInTriangle(point: cc.Vec2, triA: cc.Vec2, triB: cc.Vec2, triC: cc.Vec2) {
-        let AB = triB.subtract(triA), AC = triC.subtract(triA), BC = triC.subtract(triB), AD = point.subtract(triA), BD = point.subtract(triB);
+        let AB = triB.sub(triA), AC = triC.sub(triA), BC = triC.sub(triB), AD = point.sub(triA), BD = point.sub(triB);
         //@ts-ignore
         return (AB.cross(AC) >= 0 ^ AB.cross(AD) < 0)  && (AB.cross(AC) >= 0 ^ AC.cross(AD) >= 0) && (BC.cross(AB) > 0 ^ BC.cross(BD) >= 0); 
     }
@@ -499,8 +520,8 @@ export class CommonUtils {
             , p3 = points[(index+2) % points.length];
             let splitPoint = (index+1) % points.length;
 
-            let v1 = p2.subtract(p1);
-            let v2 = p3.subtract(p2);
+            let v1 = p2.sub(p1);
+            let v2 = p3.sub(p2);
             if(v1.cross(v2) < 0) {      // 是一个凹角, 寻找下一个
                 index = (index + 1) % points.length;
                 continue;

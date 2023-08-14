@@ -1,11 +1,9 @@
-import * as cc from "cc";
-
 import { Pool, IPool } from "../Common/Utils/Pool";
 
 export class EventInfo implements IPool {
-    callback: Function | null = null;
+    callback: Function;
     target: any;
-    once: boolean = false;
+    once: boolean;
 
     free() {
         this.callback = null;
@@ -23,9 +21,9 @@ export class EventInfo implements IPool {
 class RemoveCommand {
     public eventName:string;
     public targetId:string;
-    public callback: Function | null;
+    public callback: Function;
 
-    constructor(eventName: string, callback: Function | null, targetId: string) {
+    constructor(eventName: string, callback: Function, targetId: string) {
         this.eventName = eventName;
         this.callback = callback;
         this.targetId = targetId;
@@ -71,7 +69,7 @@ export class EventCenter {
     public static off(eventName: string, callback: Function, target: any = undefined) {
         target = target || this;
         let targetId = target['uuid'] || target['id'];
-        if(!targetId) return ;
+        if(!targetId) return false;
         this.offById(eventName, callback, targetId);
     }
     public static targetOff(target: any) {
@@ -93,7 +91,7 @@ export class EventCenter {
             this.doOff(eventName, callback, targetId);
         }
     }
-    private static doOff(eventName: string, callback: Function | null, targetId: string) {
+    private static doOff(eventName: string, callback: Function, targetId: string) {
         let collection = this._listeners[eventName];
         if(!collection) return ;
         let events = collection[targetId];
@@ -104,6 +102,7 @@ export class EventCenter {
             }
         }
         if(events.length === 0) {
+            collection[targetId] = null;
             delete collection[targetId];
         }
     }
@@ -124,7 +123,7 @@ export class EventCenter {
         this._dispatching ++;
         for(let targetId in collection) {
             for(let eventInfo of collection[targetId]) {
-                eventInfo.callback && eventInfo.callback.call(eventInfo.target, ...param);
+                eventInfo.callback.call(eventInfo.target, ...param);
                 if(eventInfo.once) {
                     let cmd = new RemoveCommand(eventName, eventInfo.callback, targetId);
                     this._removeCommands.push(cmd);
