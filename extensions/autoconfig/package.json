@@ -8,6 +8,25 @@
         "@types/node": "^16.0.1",
         "typescript": "^4.3.4"
     },
+    
+    "contributions": {
+        "scene": {
+            "script": "./dist/scene.js"
+        },
+        "messages": {
+            "start":{
+                "public": false,
+                "methods":["start"]
+            }
+        },
+        "shortcuts": [
+            {
+                "message": "start",
+                "win": "alt+v",
+                "mac": "alt+v"
+            }
+        ]
+    },
     "author": "greedy",
     "editor": ">=3.8.0",
     "scripts": {

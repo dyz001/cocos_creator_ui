@@ -156,7 +156,6 @@ export default class ResMgr {
         let deps = (cc.assetManager.dependUtil.getDepsRecursively(item.uuid) || []);
         deps.push(item.uuid);
         this.addAssetsDepends(deps);
-
         this._tmpAssetsDepends.push(...deps);
     }
     /** 删除临时添加的计数 */

@@ -16,6 +16,10 @@
             "run":{
                 "public": false,
                 "methods":["run"]
+            },
+            "create_control":{
+                "public":false,
+                "methods":["creatControl"]
             }
         },
         "shortcuts": [
@@ -23,6 +27,13 @@
                 "message": "run",
                 "win": "alt+g",
                 "mac": "alt+g"
+            }
+        ],
+        "menu":[
+            {
+                "path": "i18n:autobinder.custom_extensions",
+                "label": "i18n:autobinder.create_control",
+                "message": "create_control"
             }
         ]
     },

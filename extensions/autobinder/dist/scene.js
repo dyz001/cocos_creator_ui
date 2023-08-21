@@ -15,6 +15,19 @@ exports.load = load;
 function unload() { }
 exports.unload = unload;
 ;
+var FormType;
+(function (FormType) {
+    /** 屏幕 */
+    FormType[FormType["Screen"] = 0] = "Screen";
+    /** 固定窗口 */
+    FormType[FormType["Fixed"] = 1] = "Fixed";
+    /** 弹出窗口 */
+    FormType[FormType["Window"] = 2] = "Window";
+    /** Toast */
+    FormType[FormType["Toast"] = 3] = "Toast";
+    /** 独立窗口 */
+    FormType[FormType["Tips"] = 4] = "Tips";
+})(FormType || (FormType = {}));
 exports.methods = {
     getImportPath(exportPath, currPath) {
         exportPath = exportPath.replace(/\\/g, "/").substring(0, exportPath.lastIndexOf("."));
@@ -37,14 +50,63 @@ exports.methods = {
         tmp = tmp.substring(0, tmp.length - 1);
         return tmp;
     },
-    async start() {
+    createControl() {
         let childs = cc_1.director.getScene().children;
         if (childs.length < 3)
             return null;
         let NodeRoot = childs[0].children[1];
+        let ScriptName = `${NodeRoot.name}_Auto`;
+        let auto = NodeRoot.getComponent(ScriptName);
+        if (!auto) {
+            console.error("no autoscripts found");
+            return;
+        }
+        let path = "db://" + Const_1.default.ControlScriptPath + "/" + auto.controlName + ".ts";
+        let extendFrom = "";
+        switch (auto.formType) {
+            case FormType.Fixed: {
+                extendFrom = "UIFixed";
+                break;
+            }
+            case FormType.Screen: {
+                extendFrom = "UIScreen";
+                break;
+            }
+            case FormType.Window: {
+                extendFrom = "UIWindow";
+                break;
+            }
+            case FormType.Tips: {
+                extendFrom = "UITips";
+                break;
+            }
+            case FormType.Toast: {
+                extendFrom = "UIToast";
+                break;
+            }
+        }
+        if (!extendFrom) {
+            console.error("cant find baseclass");
+            return;
+        }
+        let content = `import { ${extendFrom} } from '../UIFrame/UIForm'\nexport class ${NodeRoot.name} extends ${extendFrom}{\n\n}`;
+        Editor.Message.request("asset-db", "create-asset", path, content);
+    },
+    async start() {
+        let childs = cc_1.director.getScene().children;
+        if (childs.length < 3)
+            return null;
+        let target_scene = childs[0];
+        childs.forEach((n) => {
+            if (n.name == "should_hide_in_hierarchy") {
+                target_scene = n;
+            }
+        });
+        let NodeRoot = target_scene.children[1];
         let ProjectDir = Editor.Project.path;
         let ScriptName = `${NodeRoot.name}_Auto`;
         let ScriptPath = `${ProjectDir}/${Const_1.default.ScriptsDir}/${ScriptName}.ts`.replace(/\\/g, "/");
+        console.log("script path:" + ScriptPath);
         let nodeMaps = {}, importMaps = {};
         this.findNodes(NodeRoot, nodeMaps, importMaps);
         let _str_import = `import * as cc from "cc";\nimport { UIAuto } from "../UIFrame/UIAuto";`;
@@ -56,8 +118,7 @@ exports.methods = {
             let type = nodeMaps[key][0];
             _str_content += `\t@property(${type})\n\t${key}: ${type} = null;\n`;
         }
-        let strScript = `
-${_str_import}
+        let strScript = `${_str_import}
 const {ccclass, property} = cc._decorator;
 @ccclass
 export default class ${ScriptName} extends UIAuto {
@@ -84,6 +145,7 @@ ${_str_content}
                     comp[key] = node.getComponent(nodeMaps[key][0]);
                 }
             }
+            comp["controlName"] = NodeRoot.name;
             console.log(ScriptName + '.ts success');
         }
     },

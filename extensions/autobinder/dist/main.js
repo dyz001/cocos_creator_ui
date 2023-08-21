@@ -11,7 +11,17 @@ const package_json_1 = __importDefault(require("../package.json"));
  * @zh 为扩展的主进程的注册方法
  */
 exports.methods = {
-    run: run
+    run: run,
+    creatControl() {
+        const options = {
+            name: package_json_1.default.name,
+            method: 'createControl',
+            args: [null]
+        };
+        const result = Editor.Message.request('scene', 'execute-scene-script', options);
+        console.log("call createControl");
+        return result;
+    },
 };
 /**
  * @en Hooks triggered after extension loading is complete

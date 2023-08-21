@@ -2,17 +2,30 @@ import UIConfig from "../../UIConfig";
 import { IFormConfig } from "../Struct";
 
 /**窗体类型 */
+// export enum FormType {
+//     /** 屏幕 */
+//     Screen = "UIScreen",
+//     /** 固定窗口 */
+//     Fixed = "UIFixed",
+//     /** 弹出窗口 */
+//     Window = "UIWindow",
+//     /** Toast */
+//     Toast = "UIToast",
+//     /** 独立窗口 */
+//     Tips = "UITips",
+
+// }
 export enum FormType {
     /** 屏幕 */
-    Screen = "UIScreen",
+    Screen ,
     /** 固定窗口 */
-    Fixed = "UIFixed",
+    Fixed,
     /** 弹出窗口 */
-    Window = "UIWindow",
+    Window,
     /** Toast */
-    Toast = "UIToast",
+    Toast,
     /** 独立窗口 */
-    Tips = "UITips",
+    Tips,
 
 }
 /**透明度类型 */

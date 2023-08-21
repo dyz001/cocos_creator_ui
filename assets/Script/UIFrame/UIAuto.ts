@@ -6,7 +6,8 @@ const { ccclass, property } = cc._decorator;
 @ccclass('UIAuto')
 export class UIAuto extends cc.Component {
     public fid: string = '';
-    public formType: FormType | null = null;
+    @property({type: cc.Enum(FormType),displayName:"formType"})
+    public formType: FormType = FormType.Screen;
     @property(CCString)
     public controlName: string = "UIBase";
     start() {

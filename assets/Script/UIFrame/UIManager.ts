@@ -110,6 +110,9 @@ export default class UIManager {
             case FormType.Tips:                                  // 独立显示
                 await this.enterToTips(com.fid, params);
             break;
+            case FormType.Toast:
+                await this.enterToToast(com, params);
+                break;
         }
         
         // 如果这个窗体在lru中存在, 那么立即删除它

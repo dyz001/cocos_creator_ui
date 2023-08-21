@@ -1,3 +1,5 @@
+import CocosHelper from "../UIFrame/CocosHelper";
+import { Loading } from "./Loading";
 import ConfigMgr from "./Manager/ConfigMgr";
 import PlayerMgr from "./Manager/PlayerMgr";
 
@@ -13,6 +15,7 @@ class Game {
         // 初始化Manager, 例如new ConfigMgr();
         this.configMgr = new ConfigMgr();
         this.playerMgr = new PlayerMgr();
+        CocosHelper.loadProgress.cb = Loading.getInstance().updateProcess.bind(Loading.getInstance());
         // 初始化平台sdk
         // todo...
         // 加载配置

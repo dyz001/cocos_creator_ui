@@ -68,6 +68,7 @@ export default class PropController extends cc.Component {
 
     public doControl(type: string | number) {
         let t = type;
+        if(!this.propertyJson) return;
         let ctrl = JSON.parse(this.propertyJson);
 
         let map = ctrl[t];      
@@ -105,8 +106,7 @@ export default class PropController extends cc.Component {
             let array = this._states.map((val, i) => {
                 return {name: val, value: i};
             });
-            //@ts-ignore
-            cc.Class.Attr.setClassAttr(this, 'state', 'enumList', array);
+            cc.CCClass.Attr.setClassAttr(this, 'state', 'enumList', array);
             //@ts-ignore
             // Editor.Utils.refreshSelectedInspector('node', this.node.uuid);
         }
@@ -119,7 +119,7 @@ export default class PropController extends cc.Component {
                 return {name: val.uid, value: i};
             });
             //@ts-ignore
-            cc.Class.Attr.setClassAttr(PropSelector, 'ctrlId', 'enumList', array);
+            cc.CCClass.Attr.setClassAttr(PropSelector, 'ctrlId', 'enumList', array);
         }
     }
 
@@ -192,23 +192,28 @@ function _setSpriteTexture(node: cc.Node, prop: any) {
         url = url.replace("resources/", "");
         url = url.split('.')[0];
     }
+    let sprite = node.getComponent(cc.Sprite);
     if(EDITOR) {
         cc.assetManager.loadAny({uuid: uuid}, (error, data) => {        
             if(error) {
                 cc.warn('PropController  load sprite texture faild', prop, error);
                 return ;
             };
-            node.getComponent(cc.Sprite).spriteFrame = data;
+            sprite.spriteFrame = data;
+            sprite.color = new cc.Color(prop.r, prop.g, prop.b, prop.a);
+            sprite.grayscale = prop.grayscale;
+            sprite.sizeMode = prop.sizemode;
+            sprite.type = prop.type;
         });
         return;
     }
 
-    cc.resources.load<cc.Texture2D>(url, cc.Texture2D, (error, data: cc.Texture2D) => {        
+    cc.resources.load<cc.SpriteFrame>(url, cc.SpriteFrame, (error, data: cc.SpriteFrame) => {        
         if(error) {
-            cc.warn('PropController  load sprite texture faild', url, error);
+            cc.warn('PropController load sprite texture faild', url, error);
             return ;
         };
-        node.getComponent(cc.Sprite).spriteFrame = new cc.SpriteFrame(data);
+        sprite.spriteFrame = data;
     });
     
 }

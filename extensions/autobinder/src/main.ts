@@ -7,7 +7,17 @@ import packageJSON from '../package.json';
  * @zh 为扩展的主进程的注册方法
  */
 export const methods: { [key: string]: (...any: any) => any } = {
-    run:run
+    run:run,
+    creatControl(){
+        const options: ExecuteSceneScriptMethodOptions = {
+            name: packageJSON.name,
+            method: 'createControl',
+            args:[null]
+        };
+        const result = Editor.Message.request('scene', 'execute-scene-script', options);
+        console.log("call createControl");
+        return result;
+    },
 };
 
 /**

@@ -1,1 +1,1 @@
-"use strict";module.exports={description:"一份空白的扩展"};
+"use strict";module.exports={description:"一份空白的扩展", custom_extensions:"自定义扩展", create_control:"创建控制器"};

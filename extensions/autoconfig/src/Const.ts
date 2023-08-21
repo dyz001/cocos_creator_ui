@@ -1,3 +1,4 @@
 export default class  Const {
-   static ConfigUrl = "extentions/autoconfig/config.json"
+   static ConfigUrl = "extensions\\autoconfig\\config.json";
+   static ControlImportFolder = "Controls";
 }

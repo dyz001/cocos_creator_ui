@@ -1,6 +1,7 @@
 export default class  Const {
     /** 规范符号 */
     static ScriptsDir = "assets/Script/AutoScripts";        // 代码生成路径
+    static ControlScriptPath = "assets/Script/Controls"
     static STANDARD_Prefix = '_';                           // 绑定前缀
     static STANDARD_Separator = '$';                        // 分隔符
     static STANDARD_End = '#';                              // 绑定后缀, 结点添加此后缀后, 不会查询其子节点

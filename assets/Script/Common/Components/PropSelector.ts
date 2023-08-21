@@ -9,7 +9,6 @@ export enum PropEmum {
     Scale,
     Anchor,
     Size,
-    Color,
     Opacity,
     Label_String,
     Sprite_Texture,

@@ -1,1 +1,1 @@
-"use strict";module.exports={description:"A blank extension"};
+"use strict";module.exports={description:"A blank extension", custom_extensions:"customExtensions", create_control:"create control"};

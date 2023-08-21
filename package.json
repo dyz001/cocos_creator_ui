@@ -2,6 +2,10 @@
   "name": "cocos_creator_ui_2",
   "uuid": "ae578e22-12b0-4064-a23c-c443be3567bf",
   "creator": {
-    "version": "3.8.0"
+    "version": "3.8.0",
+    "registry": {
+      "remote": {}
+    },
+    "dependencies": {}
   }
 }

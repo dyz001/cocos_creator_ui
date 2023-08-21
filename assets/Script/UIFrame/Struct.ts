@@ -26,7 +26,7 @@ export class ModalType {
  */
 export interface IFormConfig {
     prefabUrl: string;
-    type: string;
+    type: number;
 }
 
 export function GetForm(form: IFormConfig | string, type = FormType.Screen): IFormConfig {

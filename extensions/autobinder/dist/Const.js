@@ -5,6 +5,7 @@ class Const {
 exports.default = Const;
 /** 规范符号 */
 Const.ScriptsDir = "assets/Script/AutoScripts"; // 代码生成路径
+Const.ControlScriptPath = "assets/Script/Controls";
 Const.STANDARD_Prefix = '_'; // 绑定前缀
 Const.STANDARD_Separator = '$'; // 分隔符
 Const.STANDARD_End = '#'; // 绑定后缀, 结点添加此后缀后, 不会查询其子节点
